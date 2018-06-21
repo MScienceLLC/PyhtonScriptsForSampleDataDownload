@@ -61,45 +61,43 @@ def get_token(hostname, endpoint, username, password, verifySSL):
 
 
 def get_data(access_token, hostname, endpoint, sector, subsector, ticker, company, metric, yearNum, quarterNum, metricValue, metricUnit, metricType, pubDate, updateDate, groupNum, companyGroup, brandName, city, zipcode,  pubDateBegin, pubDateEnd, verifySSL, actualStartDate,actualEndDate):
-    headers = {"Accept": "application/json", "Accept-Language": "en-us", "Audience" : "Any", "Cache-Control": "no-cache", "Content-Type": "application/x-www-form-urlencoded", 'Authorization': "Bearer " + access_token}
+     logging.debug("Inside get_data")
+     headers = {"Accept": "application/json", "Accept-Language": "en-us", "Audience" : "Any", "Cache-Control": "no-cache", "Content-Type": "application/x-www-form-urlencoded", 'Authorization': "Bearer " + access_token}
+     url = hostname + "api/v1/" + endpoint
 
-    url = hostname + "api/v1/" + endpoint
-
-    next_page_num = 1
+     next_page_num = 1
     #first call is for data + pages
-    
-    params = {'sector': sector, 'subsector': subsector, 'ticker': ticker, 'company': company, 'metric': metric, 'yearNum': yearNum, 'quarterNum': quarterNum, 'metricValue': metricValue, 'metricUnit': metricUnit, 'metricType': metricType, 'pubDate': pubDate, 'updateDate': updateDate, 'groupNum': groupNum, 'companyGroup': companyGroup, 'brandName': brandName, 'city': city, 'zipcode': zipcode, 'page': next_page_num, 'pageSize': PAGESIZE, 'pubDateBegin': pubDateBegin, 'pubDateEnd': pubDateEnd, 'includePagination': True}
-       
-    response = requests.get(url, headers=headers, params = params, verify=False)
-    try:
-        response.raise_for_status()
-    except Exception as e:
-            print(e)
-            print("Sorry couldn't process request. Please contact Support@Mscience.com for assistance.")
-            sys.exit(1)
+     params = {'sector': sector, 'subsector': subsector, 'ticker': ticker, 'company': company, 'metric': metric, 'yearNum': yearNum, 'quarterNum': quarterNum, 'metricValue': metricValue, 'metricUnit': metricUnit, 'metricType': metricType, 'pubDate': pubDate, 'updateDate': updateDate, 'groupNum': groupNum, 'companyGroup': companyGroup, 'brandName': brandName, 'city': city, 'zipcode': zipcode, 'page': next_page_num, 'pageSize': PAGESIZE, 'pubDateBegin': pubDateBegin, 'pubDateEnd': pubDateEnd, 'includePagination': True}
+     response = requests.get(url, headers=headers, params = params, verify=False)
+     try:
+          response.raise_for_status()
+          logging.debug(response.raise_for_status())
+     except Exception as e:
+          print(e)
+          logging.debug(e)
+          print("Sorry couldn't process request. Please contact Support@Mscience.com for assistance.")
+          sys.exit(1)
 
-    dict_response = json.loads(response.text, object_pairs_hook=OrderedDict)
+     dict_response = json.loads(response.text, object_pairs_hook=OrderedDict)
     #output.extend(dict_response['transactions'])
-    page_info = dict(dict_response['paginationDetails'])
-      
-    if page_info['totalPages']==0:
-            endDate1 = endDate - timedelta(days=1)
-            actualStartDate = endDate1 - timedelta(days=1)
-	    actualEndDate = endDate1
-	    logging.debug(actualStartDate)
-	    logging.debug(actualEndDate)
-            print(actualStartDate)
-            print(actualEndDate)           
-            op = get_data(token, HOSTNAME, endpointForSampleData, sectorForSampleData, "","","","", "", "", "", "", "", "", "", "", "", "", "", "", actualStartDate, actualEndDate,"False", actualStartDate,actualEndDate)
-    else:
-        for x in range(1, page_info['totalPages']+1):
-            if not actualStartDate:
-                print("actualStartDate")
-                op = get_datapagination(token, HOSTNAME, endpointForSampleData, sectorForSampleData, "","","","", "", "", "", "", "", "", "", "", "", "", "", "", startDate, endDate,"False",x)
-            else:
-                 op = get_datapagination(token, HOSTNAME, endpointForSampleData, sectorForSampleData, "","","","", "", "", "", "", "", "", "", "", "", "", "", "", actualStartDate, actualEndDate,"False",x)
-
-    return op    
+     page_info = dict(dict_response['paginationDetails'])
+     if page_info['totalPages']==0:
+          endDate1 = endDate - timedelta(days=1)
+          actualStartDate = endDate1 - timedelta(days=1)
+	  actualEndDate = endDate1
+	  logging.debug(actualStartDate)
+	  logging.debug(actualEndDate)
+          print(actualStartDate)
+          print(actualEndDate)           
+          op = get_data(token, HOSTNAME, endpointForSampleData, sectorForSampleData, "","","","", "", "", "", "", "", "", "", "", "", "", "", "", actualStartDate, actualEndDate,"False", actualStartDate,actualEndDate)
+     else:
+          for x in range(1, page_info['totalPages']+1):
+               if not actualStartDate:
+                    print("actualStartDate")
+                    op = get_datapagination(token, HOSTNAME, endpointForSampleData, sectorForSampleData, "","","","", "", "", "", "", "", "", "", "", "", "", "", "", startDate, endDate,"False",x)
+               else:
+                    op = get_datapagination(token, HOSTNAME, endpointForSampleData, sectorForSampleData, "","","","", "", "", "", "", "", "", "", "", "", "", "", "", actualStartDate, actualEndDate,"False",x)
+     return op    
          
 
 def get_datapagination(access_token, hostname, endpoint, sector, subsector, ticker, company, metric, yearNum, quarterNum, metricValue, metricUnit, metricType, pubDate, updateDate, groupNum, companyGroup, brandName, city, zipcode,  pubDateBegin, pubDateEnd, verifySSL,pageNum):
@@ -147,7 +145,7 @@ def upload_to_S3Bucket():
      logging.debug("Inside upload_to_S3Bucket")
      try:
           # Connect to S3
-          conn = S3Connection('','',calling_format=OrdinaryCallingFormat())
+          conn = S3Connection('Secret Code','Secret Key',calling_format=OrdinaryCallingFormat())
           b = conn.get_bucket('mscience-test-upload')
           # Get file info
           source_path = os.path.dirname(os.path.abspath("MDataE-UKConsumer.csv"))+'\MDataE-UKConsumer.csv'
@@ -184,7 +182,7 @@ if __name__ == '__main__':
     print(startDate)
     print(endDate)	
     try:
-            token = get_token(HOSTNAME,endpointForSampleData, "", "", "False")
+            token = get_token(HOSTNAME,endpointForSampleData, "LoginId", "Password", "False")
             data = get_data(token, HOSTNAME, endpointForSampleData, sectorForSampleData, "","","","", "", "", "", "", "", "", "", "", "", "", "", "", startDate, endDate,"False",None,None)
             convert_data(data, "MDataE-UKConsumer.csv")
             upload_to_S3Bucket()
